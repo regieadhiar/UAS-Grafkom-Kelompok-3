@@ -1,0 +1,40 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build and Run Fast",
+      "type": "shell",
+      "command": "g++ -O2 '${file}' -o '${workspaceFolder}\\bin\\${fileBasenameNoExtension}.exe' -I '${workspaceFolder}\\include' -L '${workspaceFolder}\\lib' -lfreeglut -lglew32 -lfreeimage -lopengl32 -lglu32; if ($?) { & '${workspaceFolder}\\bin\\${fileBasenameNoExtension}.exe' }",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Build Only",
+      "type": "shell",
+      "command": "g++ -O2 '${file}' -o '${workspaceFolder}\\bin\\${fileBasenameNoExtension}.exe' -I '${workspaceFolder}\\include' -L '${workspaceFolder}\\lib' -lfreeglut -lglew32 -lfreeimage -lopengl32 -lglu32",
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "Run Program",
+      "type": "shell",
+      "command": "& '${workspaceFolder}\\bin\\${fileBasenameNoExtension}.exe'",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}
