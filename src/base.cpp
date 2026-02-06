@@ -51,21 +51,6 @@ void cube(int colorType = 0) {
     case 1:
         glColor3ub(179, 147, 88); // Wood Plank Color
         break;
-    case 2:
-        glColor3ub(128, 127, 128); // Stone Color
-        break;
-    case 3:
-        glColor3ub(121, 89, 51); // Wood Slab Color
-        break;
-    case 4:
-        glColor3ub(234, 226, 218); // Quartz White Color
-        break;
-    case 5:
-        glColor3ub(65, 42, 20); // Roof Color
-        break;
-    case 6:
-        glColor3ub(134, 146, 140);
-        break;
     default:
         glColor3ub(62, 48, 31); // Log Beam Color
         break;
@@ -73,130 +58,119 @@ void cube(int colorType = 0) {
     glutSolidCube(1.0);
 }
 
+void drawFlowerAt(float posX, float posY, float posZ,
+                    float scale = 1.0f,
+                    float rotationY = 0.0f,
+                    int petals = 6,
+                    float rMultiplier = 1.0f)
+{
+    glPushMatrix();
 
-void drawFloor() {
-    // Lantai abu-abu gelap
-    // glEnable(GL_LIGHTING);
-    glBegin(GL_QUADS);
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glVertex3f(-10.0f, 1.0f, -10.0f);
-    glVertex3f(-10.0f, 1.0f,  10.0f);
-    glVertex3f( 10.0f, 1.0f,  10.0f);
-    glVertex3f( 10.0f, 1.0f, -10.0f);
-    glEnd();
+    // Pindah ke posisi pusat bunga
+    glTranslatef(posX, posY, posZ);
 
-    // Garis grid
-    glDisable(GL_LIGHTING);
-    glColor3f(0.3f, 0.3f, 0.35f);
-    glBegin(GL_LINES);
-    for (float i = -10.0f; i <= 10.0f; i += 1.0f) {
-        glVertex3f(i, 1.01f, -10.0f); glVertex3f(i, 1.01f, 10.0f);
-        glVertex3f(-10.0f, 1.01f, i); glVertex3f(10.0f, 1.01f, i);
+    // Rotasi agar bunga bisa menghadap arah tertentu
+    glRotatef(rotationY, 0.0f, 1.0f, 0.0f);
+
+    // Skala ukuran
+    glScalef(scale, scale, scale);
+
+    // Warna kelopak
+    glColor3f(0.95f, 0.4f, 0.75f);  // pink soft
+    glLineWidth(10.0f);
+
+    glBegin(GL_LINE_STRIP);
+
+    float a = 0.85f * rMultiplier;   // radius maksimal
+    int k = petals;
+
+    // Loop theta untuk rose curve
+    for (float theta = 0.0f; theta <= 2 * PI * 2; theta += 0.008f)
+    {
+        float r = a * cos(k * theta);
+        if (r < 0) r = 0;
+
+        // === Perubahan utama: bidang XZ ===
+        // X = r * cos(theta)   → horizontal
+        // Z = r * sin(theta)   → vertikal (naik)
+        // Y tetap 0 (rata di bidang XZ)
+        float x = r * cos(theta);
+        float z = r * sin(theta);
+        float y = 0.0f;               // bisa ditambah variasi kalau mau tebal
+
+        glVertex3f(x, y, z);
     }
+
     glEnd();
-    glEnable(GL_LIGHTING);
-}
-
-void Lantai() {
-    // glPushMatrix();
-    //     glColor3ub(34, 139, 34); // Warna hijau rumput
-    //     // glTranslatef(0.0f, 0.5f, 0.0f);
-    //     glRotatef(-90, 1, 0, 0); // Putar agar datar di sumbu XZ
-    //     glutSolidCylinder(5.0, 0.5, 50, 5);
-    // glPopMatrix();
-    glPushMatrix();
-        glColor3ub(34, 139, 34); // Warna hijau rumput
-        glTranslatef(0.0f, -0.5f, 0.0f);
-        glRotatef(-90, 1, 0, 0); // Putar agar datar di sumbu XZ
-        glRotatef(22.5, 0, 0, 1); // Putar agar datar di sumbu XZ
-        glutSolidCylinder(15.0, 0.5, 8, 5);
     glPopMatrix();
+
 }
 
-// Fungsi untuk menggambar Lampu Taman Modern
-void drawGardenLamp(float x, float y, float z, float scale) {
+float rotationAngle = 0.0f;  // sudut rotasi sumbu Y (derajat)
+float rotationSpeed = 20.0f;
+
+int lastTime = 0;
+
+// Draw one instance of the water curve at a given position
+void drawWaterFlowAt(float centerX, float centerY, float centerZ) {
     glPushMatrix();
-        glTranslatef(x, y, z);
-        glScalef(scale, scale, scale);
-
-        // --- 1. TIANG BESI (Batangan Bawah) ---
-        glColor3ub(30, 30, 35); // Abu-abu gelap (besi tua)
-
-        glPushMatrix();
-            glRotatef(-90.0f, 1.0f, 0.0f, 0.0f); // Tegakkan silinder
-            glutSolidCylinder(0.10, 3.0, 16, 8);   // Tiang utama
-            // Dudukan bawah (base)
-            glTranslatef(0.0f, 0.0f, -0.05f);
-            glutSolidCylinder(0.30, 0.10, 16, 4);
-        glPopMatrix();
-
-        // --- 2. BOLA LAMPU (Bulb) - hanya visual, tanpa menyala ---
-        glPushMatrix();
-            glTranslatef(0.0f, 3.0f, 0.0f); // Posisi di ujung tiang
-            // Bola lampu warna kuning-putih hangat (mati/tidak menyala)
-            glColor3ub(240, 235, 200); // Warna kuning lembut agak pudar
-            glutSolidSphere(0.50, 20, 20);
-        glPopMatrix();
-
-        // --- 3. TOPI/PENUTUP ATAS (opsional) ---
-        glPushMatrix();
-            glColor3ub(30, 30, 35); // Warna besi sama seperti tiang
-            glTranslatef(0.0f, 2.5f, 0.0f);
-            glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
-            glutSolidCone(0.18, 0.25, 12, 3); // Topi agak lebih lebar
-        glPopMatrix();
-
-    glPopMatrix();
-}
-
-void drawBench(float x, float y, float z, float rotation) {
-    glPushMatrix();
-        glTranslatef(x, y, z);
-        glRotatef(rotation, 0.0f, 1.0f, 0.0f);
+    
+    // Move to the desired center position
+    glTranslatef(centerX, centerY, centerZ);
+    
+    // Optional slow rotation (using the time-based rotationAngle)
+    glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
+    
+    glColor3f(0.25f, 0.65f, 0.95f);
+    glLineWidth(3.5f);
+    
+    glBegin(GL_LINE_STRIP);
+    
+    float t_start = 0.0f;
+    float t_end   = 12.0f * 2 * 3.14159265359f;
+    float step    = 0.08f;
+    
+    for (float t = t_start; t <= t_end; t += step) {
+        // X: -0.5 → 0.5 relative to center
+        float x = 0.5f * sin(t * 1.2f + 0.0f);
         
-        // --- TEMPAT DUDUK ---
-        glPushMatrix();
-            glTranslatef(0.0f, 0.6f, 0.0f);
-            glScalef(3.0f, 0.2f, 1.2f);
-            cube(1); // Menggunakan warna Wood Plank
-        glPopMatrix();
-
-        // --- SANDARAN ---
-        glPushMatrix();
-            glTranslatef(0.0f, 1.2f, -0.5f);
-            glScalef(3.0f, 1.0f, 0.2f);
-            cube(1);
-        glPopMatrix();
-
-        // --- KAKI-KAKI (4 buah) ---
-        glColor3ub(40, 40, 40); // Warna kaki besi hitam/gelap
-        // Depan Kiri
-        glPushMatrix();
-            glTranslatef(-1.3f, 0.3f, 0.4f);
-            glScalef(0.2f, 0.6f, 0.2f);
-            glutSolidCube(1.0);
-        glPopMatrix();
-        // Depan Kanan
-        glPushMatrix();
-            glTranslatef(1.3f, 0.3f, 0.4f);
-            glScalef(0.2f, 0.6f, 0.2f);
-            glutSolidCube(1.0);
-        glPopMatrix();
-        // Belakang Kiri
-        glPushMatrix();
-            glTranslatef(-1.3f, 0.3f, -0.4f);
-            glScalef(0.2f, 0.6f, 0.2f);
-            glutSolidCube(1.0);
-        glPopMatrix();
-        // Belakang Kanan
-        glPushMatrix();
-            glTranslatef(1.3f, 0.3f, -0.4f);
-            glScalef(0.2f, 0.6f, 0.2f);
-            glutSolidCube(1.0);
-        glPopMatrix();
-
+        // Z: -0.5 → 0.5 relative
+        float z = 0.5f * cos(t * 1.0f + 1.5f);
+        
+        // Y: 0.0 → 1.0 relative (then we offset to 3.5–4.5 range later)
+        float y_relative = 0.5f + 0.5f * sin(t * 0.9f + 0.8f);
+        
+        // Final coordinates (relative curve + position offset)
+        glVertex3f(x, y_relative, z);
+    }
+    
+    glEnd();
+    
     glPopMatrix();
 }
+
+void updateAnimation(int value) {
+    int currentTime = glutGet(GLUT_ELAPSED_TIME);  // milliseconds since glutInit
+
+    if (lastTime == 0) {
+        lastTime = currentTime;  // first frame
+    }
+
+    // Calculate how much time passed (in seconds)
+    float deltaTime = (currentTime - lastTime) / 1000.0f;  // seconds
+
+    // Add rotation based on real time
+    rotationAngle += rotationSpeed * deltaTime;
+
+    // Optional: wrap around
+    if (rotationAngle > 360.0f) rotationAngle -= 360.0f;
+
+    lastTime = currentTime;
+
+    glutPostRedisplay();
+    glutTimerFunc(16, updateAnimation, 0);  // still ~60 fps target
+}
+
 void drawTree(float x, float z) {
     glPushMatrix();
         glTranslatef(x, 0.0f, z);
@@ -235,6 +209,7 @@ void drawTree(float x, float z) {
 
     glPopMatrix();
 }
+
 void drawPicnicTable(float tx, float ty, float tz, float sx, float sy, float sz, float ry) {
     glPushMatrix();
         // --- 1. POSISI & ROTASI UTAMA ---
@@ -316,31 +291,375 @@ void drawPicnicTable(float tx, float ty, float tz, float sx, float sy, float sz,
     glPopMatrix();
 }
 
+void Lantai() {
+    //Segi 9
+    glPushMatrix();
+        glColor3ub(34, 139, 34);
+        glRotatef(-90, 1, 0, 0);
+        glutSolidCylinder(5.0, 1.0, 50, 5);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(156, 156, 156);
+        glTranslatef(0.0f, -0.5f, 0.0f);
+        glRotatef(-90, 1, 0, 0);
+        glRotatef(22.5, 0, 0, 1);
+        glutSolidCylinder(15.0, 1.0, 8, 5);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(119, 180, 160);
+        glTranslatef(0.0f, -0.51f, 0.0f);
+        glRotatef(-90, 1, 0, 0);
+        glRotatef(22.5, 0, 0, 1);
+        glutSolidCylinder(15.2, 1.0, 8, 5);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(95, 124, 66);
+        glTranslatef(0.0f, -0.52f, 0.0f);
+        glRotatef(-90, 1, 0, 0);
+        glRotatef(22.5, 0, 0, 1);
+        glutSolidCylinder(20.0, 1.0, 8, 5);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(119, 180, 160);
+        glTranslatef(0.0f, -0.525f, 0.0f);
+        glRotatef(-90, 1, 0, 0);
+        glRotatef(22.5, 0, 0, 1);
+        glutSolidCylinder(20.2, 1.0, 8, 5);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(96, 125, 67);
+        glTranslatef(0.0f, -0.53f, 0.0f);
+        glRotatef(-90, 1, 0, 0);
+        glRotatef(22.5, 0, 0, 1);
+        glutSolidCylinder(35.0, 1.0, 8, 5);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(255, 255, 255);
+        glTranslatef(0.0f, -0.54f, 0.0f);
+        glRotatef(-90, 1, 0, 0);
+        glRotatef(22.5, 0, 0, 1);
+        glutSolidCylinder(40.0, 1.0, 8, 5);
+    glPopMatrix();
+    // Segi 4
+    glPushMatrix();
+        glColor3ub(156, 156, 156);
+        glTranslatef(0.0f, -0.009f, 0.0f);
+        glScalef(64.75f, 1.0f, 8.0f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(156, 156, 156);
+        glTranslatef(0.0f, -0.009f, 0.0f);
+        glRotatef(-90, 0, 1, 0);
+        glScalef(64.75f, 1.0f, 8.0f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(119, 180, 160);
+        glTranslatef(0.0f, -0.01f, 0.0f);
+        glScalef(64.75f, 1.0f, 8.2f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(119, 180, 160);
+        glTranslatef(0.0f, -0.01f, 0.0f);
+        glRotatef(-90, 0, 1, 0);
+        glScalef(64.75f, 1.0f, 8.2f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    //Base Bunga
+    glPushMatrix();
+        glColor3ub(155, 155, 155);
+        glTranslatef(0.0f, 0.1f, 8.0f);
+        glRotatef(-90, 1, 0, 0);
+        glutSolidCylinder(1.0, 0.5, 32, 5);
+    glPopMatrix();
+    drawFlowerAt(0.0f, 0.61f, 8.0f, 0.8f, 45.0f, 5, 1.0f);
+    glPushMatrix();
+        glColor3ub(155, 155, 155);
+        glTranslatef(0.0f, 0.1f, -8.0f);
+        glRotatef(-90, 1, 0, 0);
+        glutSolidCylinder(1.0, 0.5, 32, 5);
+    glPopMatrix();
+    drawFlowerAt(0.0f, 0.61f, -8.0f, 0.8f, 45.0f, 5, 1.0f);
+    glPushMatrix();
+        glColor3ub(155, 155, 155);
+        glTranslatef(8.0f, 0.1f, 0.0f);
+        glRotatef(-90, 1, 0, 0);
+        glutSolidCylinder(1.0, 0.5, 32, 5);
+    glPopMatrix();
+    drawFlowerAt(8.0f, 0.61f, 0.0f, 0.8f, 45.0f, 5, 1.0f);
+    glPushMatrix();
+        glColor3ub(155, 155, 155);
+        glTranslatef(-8.0f, 0.1f, 0.0f);
+        glRotatef(-90, 1, 0, 0);
+        glutSolidCylinder(1.0, 0.5, 32, 5);
+    glPopMatrix();
+    drawFlowerAt(-8.0f, 0.61f, 0.0f, 0.8f, 45.0f, 5, 1.0f);
+    glPushMatrix();
+        glColor3ub(155, 155, 155);
+        glTranslatef(6.0f, 0.1f, 6.0f);
+        glRotatef(-90, 1, 0, 0);
+        glutSolidCylinder(1.0, 0.5, 32, 5);
+    glPopMatrix();
+    drawFlowerAt(6.0f, 0.61f, 6.0f, 0.8f, 45.0f, 5, 1.0f);
+    glPushMatrix();
+        glColor3ub(155, 155, 155);
+        glTranslatef(6.0f, 0.1f, -6.0f);
+        glRotatef(-90, 1, 0, 0);
+        glutSolidCylinder(1.0, 0.5, 32, 5);
+    glPopMatrix();
+    drawFlowerAt(6.0f, 0.61f, -6.0f, 0.8f, 45.0f, 5, 1.0f);
+    glPushMatrix();
+        glColor3ub(155, 155, 155);
+        glTranslatef(-6.0f, 0.1f, -6.0f);
+        glRotatef(-90, 1, 0, 0);
+        glutSolidCylinder(1.0, 0.5, 32, 5);
+    glPopMatrix();
+    drawFlowerAt(-6.0f, 0.61f, -6.0f, 0.8f, 45.0f, 5, 1.0f);
+    glPushMatrix();
+        glColor3ub(155, 155, 155);
+        glTranslatef(-6.0f, 0.1f, 6.0f);
+        glRotatef(-90, 1, 0, 0);
+        glutSolidCylinder(1.0, 0.5, 32, 5);
+    glPopMatrix();
+    drawFlowerAt(-6.0f, 0.61f, 6.0f, 0.8f, 45.0f, 5, 1.0f);
+}
+
+void AirMancur() {
+    glPushMatrix();
+        glColor3ub(123, 123, 123);
+        glTranslatef(0.0f, 0.5f, 0.0f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(4.5f, 1.5f, 32, 8);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(123, 123, 123);
+        glTranslatef(0.0f, 2.0f, 0.0f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(0.5f, 1.5f, 32, 8);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(123, 123, 123);
+        glTranslatef(0.0f, 1.5f, 0.0f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(2.5f, 1.5f, 32, 8);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(123, 123, 123);
+        glTranslatef(3.3f, 1.5f, 0.0f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(0.1f, 1.5f, 32, 8);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(123, 123, 123);
+        glTranslatef(-3.3f, 1.5f, 0.0f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(0.1f, 1.5f, 32, 8);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(123, 123, 123);
+        glTranslatef(0.0f, 1.5f, 3.3f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(0.1f, 1.5f, 32, 8);
+    glPopMatrix();
+    glPushMatrix();
+        glColor3ub(123, 123, 123);
+        glTranslatef(0.0f, 1.5f, -3.3f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(0.1f, 1.5f, 32, 8);
+    glPopMatrix();
+
+
+    drawWaterFlowAt(  3.3f, 2.0f,  0.0f);   // front-right
+    drawWaterFlowAt( -3.3f, 2.0f,  0.0f);   // front-left
+    drawWaterFlowAt(  0.0f, 2.0f, 3.3f);   // back-right
+    drawWaterFlowAt( 0.0f, 2.0f, -3.3f);   // back-left
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_CULL_FACE);
+    //Still Water
+    glPushMatrix();
+        glColor4ub(65, 107, 223, 200);
+        glTranslatef(0.0f, 0.5f, 0.0f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(4.0f, 1.51f, 32, 8);
+    glPopMatrix();
+    glPushMatrix();
+        glColor4ub(65, 107, 223, 200);
+        glTranslatef(0.0f, 1.5f, 0.0f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(2.0f, 1.51f, 32, 8);
+    glPopMatrix();
+    glPushMatrix();
+        glColor4ub(65, 107, 223, 200);
+        glTranslatef(0.0f, 2.0f, 0.0f);
+        glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+        glutSolidCylinder(0.4f, 1.51f, 32, 8);
+    glPopMatrix();
+    //Fall Water
+    glPushMatrix();
+        glColor4ub(65, 107, 223, 200);
+        glTranslatef(0.0f, 3.1f, 0.0f);
+        glScalef(0.2f, 1.0f, 0.2f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glColor4ub(65, 107, 223, 200);
+        glTranslatef(0.0f, 3.001f, 0.0f);
+        glScalef(1.0f, 1.0f, 0.2f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glColor4ub(65, 107, 223, 200);
+        glTranslatef(0.0f, 3.001f, 0.0f);
+        glRotatef(90.0f, 0.0f, 1.0f, 0.0f);
+        glScalef(1.0f, 1.0f, 0.2f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glColor4ub(65, 107, 223, 200);
+        glTranslatef(0.0f, 2.501f, 0.0f);
+        glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+        glScalef(5.0f, 1.0f, 0.8f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    glPushMatrix();
+        glColor4ub(65, 107, 223, 200);
+        glTranslatef(0.0f, 2.501f, 0.0f);
+        glRotatef(-45.0f, 0.0f, 1.0f, 0.0f);
+        glScalef(5.0f, 1.0f, 0.8f);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+    glDepthMask(GL_TRUE);
+}
+
+void drawBench(float x, float y, float z, float rotation) {
+    glPushMatrix();
+        glTranslatef(x, y, z);
+        glRotatef(rotation, 0.0f, 1.0f, 0.0f);
+        
+        // --- TEMPAT DUDUK ---
+        glPushMatrix();
+            glTranslatef(0.0f, 0.6f, 0.0f);
+            glScalef(3.0f, 0.2f, 1.2f);
+            cube(1); // Menggunakan warna Wood Plank
+        glPopMatrix();
+
+        // --- SANDARAN ---
+        glPushMatrix();
+            glTranslatef(0.0f, 1.2f, -0.5f);
+            glScalef(3.0f, 1.0f, 0.2f);
+            cube(1);
+        glPopMatrix();
+
+        // --- KAKI-KAKI (4 buah) ---
+        glColor3ub(40, 40, 40); // Warna kaki besi hitam/gelap
+        // Depan Kiri
+        glPushMatrix();
+            glTranslatef(-1.3f, 0.3f, 0.4f);
+            glScalef(0.2f, 0.6f, 0.2f);
+            glutSolidCube(1.0);
+        glPopMatrix();
+        // Depan Kanan
+        glPushMatrix();
+            glTranslatef(1.3f, 0.3f, 0.4f);
+            glScalef(0.2f, 0.6f, 0.2f);
+            glutSolidCube(1.0);
+        glPopMatrix();
+        // Belakang Kiri
+        glPushMatrix();
+            glTranslatef(-1.3f, 0.3f, -0.4f);
+            glScalef(0.2f, 0.6f, 0.2f);
+            glutSolidCube(1.0);
+        glPopMatrix();
+        // Belakang Kanan
+        glPushMatrix();
+            glTranslatef(1.3f, 0.3f, -0.4f);
+            glScalef(0.2f, 0.6f, 0.2f);
+            glutSolidCube(1.0);
+        glPopMatrix();
+
+    glPopMatrix();
+}
+
 void dekorasiTaman() {
     // Bangku 
-    drawBench(9.0f, 0.0f, 9.0f, -135.0f); 
-    drawBench(-9.0f, 0.0f, 9.0f, 135.0f); 
-    drawBench(9.0f, 0.0f, -9.0f, -45.0f);
-	drawBench(-9.0f, 0.0f, -9.0f, 45.0f);
-	// bangku tambah payung
-	// drawPicnicTable(8.0f, 0.0f, 6.0f, 1.0f, 1.0f, 1.0f, 0.0f);
-	// drawPicnicTable(-8.0f, 0.0f, 6.0f, 1.0f, 1.0f, 1.0f, 0.0f);
-	 // Pohon 
-    // drawTree(12.0f, 5.0f);  
-    // drawTree(-12.0f, 5.0f); 
-    // drawTree(12.0f, -5.0f);  
-    // drawTree(-12.0f, -5.0f); 
+    drawBench(9.0f, 0.5f, 9.0f, -135.0f); 
+    drawBench(-9.0f, 0.5f, 9.0f, 135.0f); 
+    drawBench(9.0f, 0.5f, -9.0f, -45.0f);
+	drawBench(-9.0f, 0.5f, -9.0f, 45.0f);
+    // bangku tambah payung
+	drawPicnicTable(12.0f, 0.5f, 12.0f, 1.0f, 1.0f, 1.0f, -45.0f);
+	drawPicnicTable(-12.0f, 0.5f, 12.0f, 1.0f, 1.0f, 1.0f, 45.0f);
+	drawPicnicTable(12.0f, 0.5f, -12.0f, 1.0f, 1.0f, 1.0f, 45.0f);
+	drawPicnicTable(-12.0f, 0.5f, -12.0f, 1.0f, 1.0f, 1.0f, -45.0f);
+	//  Pohon 
+    drawTree(20.0f, 5.0f);  
+    drawTree(-20.0f, 5.0f); 
+    drawTree(20.0f, -5.0f);  
+    drawTree(-20.0f, -5.0f); 
+    drawTree(5.0f, 20.0f);  
+    drawTree(-5.0f, 20.0f); 
+    drawTree(5.0f, -20.0f);  
+    drawTree(-5.0f, -20.0f); 
+    drawTree(31.0f, 5.0f);  
+    drawTree(-31.0f, 5.0f); 
+    drawTree(31.0f, -5.0f);  
+    drawTree(-31.0f, -5.0f); 
+    drawTree(5.0f, 31.0f);  
+    drawTree(-5.0f, 31.0f); 
+    drawTree(5.0f, -31.0f);  
+    drawTree(-5.0f, -31.0f); 
+}
+
+// Fungsi untuk menggambar Lampu Taman Modern
+void drawGardenLamp(float x, float y, float z, float scale) {
+    glPushMatrix();
+        glTranslatef(x, y, z);
+        glScalef(scale, scale, scale);
+
+        // --- 1. TIANG BESI (Batangan Bawah) ---
+        glColor3ub(30, 30, 35); // Abu-abu gelap (besi tua)
+
+        glPushMatrix();
+            glRotatef(-90.0f, 1.0f, 0.0f, 0.0f); // Tegakkan silinder
+            glutSolidCylinder(0.10, 3.0, 16, 8);   // Tiang utama
+            // Dudukan bawah (base)
+            glTranslatef(0.0f, 0.0f, -0.05f);
+            glutSolidCylinder(0.30, 0.10, 16, 4);
+        glPopMatrix();
+
+        // --- 2. BOLA LAMPU (Bulb) - hanya visual, tanpa menyala ---
+        glPushMatrix();
+            glTranslatef(0.0f, 3.0f, 0.0f); // Posisi di ujung tiang
+            // Bola lampu warna kuning-putih hangat (mati/tidak menyala)
+            glColor3ub(240, 235, 200); // Warna kuning lembut agak pudar
+            glutSolidSphere(0.50, 20, 20);
+        glPopMatrix();
+
+        // --- 3. TOPI/PENUTUP ATAS (opsional) ---
+        glPushMatrix();
+            glColor3ub(30, 30, 35); // Warna besi sama seperti tiang
+            glTranslatef(0.0f, 2.5f, 0.0f);
+            glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+            glutSolidCone(0.18, 0.25, 12, 3); // Topi agak lebih lebar
+        glPopMatrix();
+
+    glPopMatrix();
 }
 
 void lampu() {
-    drawGardenLamp(5.5f, 0.0f, 13.0f, 1.0f); 
-    drawGardenLamp(-5.5f, 0.0f, 13.0f, 1.0f); 
-    drawGardenLamp(5.5f, 0.0f, -13.0f, 1.0f); 
-    drawGardenLamp(-5.5f, 0.0f, -13.0f, 1.0f); 
-    drawGardenLamp(13.25f, 0.0f, -5.5f, 1.0f); 
-    drawGardenLamp(-13.25f, 0.0f, -5.5f, 1.0f); 
-    drawGardenLamp(13.25f, 0.0f, 5.5f, 1.0f); 
-    drawGardenLamp(-13.25f, 0.0f, 5.5f, 1.0f); 
+    drawGardenLamp(5.5f, 0.55f, 13.0f, 1.0f); 
+    drawGardenLamp(-5.5f, 0.55f, 13.0f, 1.0f); 
+    drawGardenLamp(5.5f, 0.55f, -13.0f, 1.0f); 
+    drawGardenLamp(-5.5f, 0.55f, -13.0f, 1.0f); 
+    drawGardenLamp(13.25f, 0.55f, -5.5f, 1.0f); 
+    drawGardenLamp(-13.25f, 0.55f, -5.5f, 1.0f); 
+    drawGardenLamp(13.25f, 0.55f, 5.5f, 1.0f); 
+    drawGardenLamp(-13.25f, 0.55f, 5.5f, 1.0f); 
 }
 
 
@@ -348,18 +667,16 @@ void lampu() {
 #define MAX_LIGHTS 12
 
 float lightX[MAX_LIGHTS] = { 5.5f,  -5.5f, 5.5f,  -5.5f,  13.25f,  -13.25f ,  13.25f,  -13.25f };
-float lightY[MAX_LIGHTS] = { 3.0f,  3.0f,  3.0f,  3.0f,  3.0f,  3.0f ,  3.0f,  3.0f };
+float lightY[MAX_LIGHTS] = { 3.55f,  3.55f,  3.55f,  3.55f,  3.55f,  3.55f ,  3.55f,  3.55f };
 float lightZ[MAX_LIGHTS] = { 13.0f,  13.0f, -13.0f, -13.0f, -5.5f, -5.5f ,  5.5f,  5.5f };
 
 bool lightIsSpot[MAX_LIGHTS] = { false, false, false, false, false, false }; // true = spotlight
 
-float spotCutoff = 35.0f;    // bisa diubah-ubah nanti
-float spotExponent = 5.0f;
+float spotCutoff = 55.0f;    // bisa diubah-ubah nanti
+float spotExponent = 12.0f;
 
 int totalLights = 8;
 
-
-// 2. Fungsi updateLighting (copy utuh)
 void updateLighting() {
     glEnable(GL_LIGHTING);
 
@@ -399,7 +716,6 @@ void updateLighting() {
 }
 
 
-// 3. (Opsional) Visualisasi sumber cahaya — bagus untuk debug
 void drawLightSource(float x, float y, float z, bool isSpot) {
     glDisable(GL_LIGHTING);
     glPushMatrix();
@@ -416,115 +732,6 @@ void drawLightSource(float x, float y, float z, bool isSpot) {
     glPopMatrix();
     glEnable(GL_LIGHTING);
 }
-
-void drawWaterFlow(float x, float y, float z, float radius, float height) {
-    glColor4f(0.4f, 0.7f, 1.0f, 0.35f);  // biru transparan = efek air
-    glPushMatrix();
-        glTranslatef(x, y, z);
-        glRotatef(-90, 1,0,0);
-        GLUquadric* q = gluNewQuadric();
-        gluCylinder(q, radius*0.9, radius*0.6, height, 24, 1);
-        gluDeleteQuadric(q);
-    glPopMatrix();
-}
-
-void drawFountain() {
-    // ────────────────────────────────────────────────
-    // Bagian OPAQUE (tidak transparan) → render dulu
-    // ────────────────────────────────────────────────
-
-    // 1. Kolam dasar (ring beton)
-    glColor3ub(75, 75, 80);
-    glPushMatrix();
-        glTranslatef(0, 0.25f, 0);
-        glRotatef(90, 1,0,0);
-        glutSolidTorus(0.40, 6.2, 24, 64);
-    glPopMatrix();
-
-    // Tingkat 1 (mangkuk bawah)
-    float level1_y = 0.6f;
-    glColor3ub(140, 30, 100);
-    glPushMatrix();
-        glTranslatef(0, level1_y, 0);
-        glRotatef(90, 1,0,0);
-        glutSolidCone(4.2, 1.1, 32, 6);
-    glPopMatrix();
-
-    // Tingkat 2
-    float level2_y = level1_y + 1.4f;
-    glColor3ub(155, 45, 115);
-    glPushMatrix();
-        glTranslatef(0, level2_y, 0);
-        glRotatef(90, 1,0,0);
-        glutSolidCone(3.1, 0.9, 32, 6);
-    glPopMatrix();
-
-    // Tingkat 3
-    float level3_y = level2_y + 1.3f;
-    glColor3ub(170, 60, 130);
-    glPushMatrix();
-        glTranslatef(0, level3_y, 0);
-        glRotatef(90, 1,0,0);
-        glutSolidCone(2.0, 0.7, 32, 6);
-    glPopMatrix();
-
-    // ── Tiang tengah emas ──
-    float tiang_radius = 0.50f;
-    float tiang_tinggi = level3_y + 0.4f;   // ujung tiang berada di sini
-    glColor3ub(220, 180, 60);
-    glPushMatrix();
-        glTranslatef(0, 0.5f, 0);
-        glRotatef(-90, 1,0,0);
-        glutSolidCylinder(tiang_radius, tiang_tinggi, 24, 1);
-    glPopMatrix();
-
-    // ── Mangkuk kecil (penutup celah) ──
-    // Posisi: tepat di ujung tiang + sedikit overlap kecil
-    float overlap = 0.12f;                    // sesuaikan ini jika masih ada celah (0.08f – 0.20f biasanya pas)
-    float mangkuk_kecil_y = 0.5f + tiang_tinggi - overlap;
-
-    glColor3ub(170, 60, 130);                 // sama dengan tingkat 3 agar nyambung
-    glPushMatrix();
-        glTranslatef(0, mangkuk_kecil_y, 0);
-        glRotatef(90, 1,0,0);                 // cone terbalik → bentuk mangkuk
-        glutSolidCone(tiang_radius + 0.9f, 0.55f, 28, 1);  // radius alas lebih lebar, tinggi sedang
-    glPopMatrix();
-
-    // ── Ornamen puncak (segitiga/kerucut emas) ──
-    // Posisi: tepat di atas mangkuk kecil + sedikit overlap
-    float puncak_y = mangkuk_kecil_y + 0.55f - 0.10f;   // 0.55f = tinggi mangkuk kecil, -0.10f = overlap kecil
-
-    glColor3ub(255, 220, 80);
-    glPushMatrix();
-        glTranslatef(0, puncak_y, 0);
-        glRotatef(-90, 1,0,0);
-        glutSolidCone(0.75f, 1.2f, 16, 1);    // radius dasar agak lebih kecil dari alas mangkuk kecil
-    glPopMatrix();
-
-    // ────────────────────────────────────────────────
-    // Bagian TRANSPARAN → render setelah opaque
-    // ────────────────────────────────────────────────
-
-    glDepthMask(GL_FALSE);
-
-    // Permukaan air kolam
-    glColor4f(0.15f, 0.38f, 0.65f, 0.75f);
-    glPushMatrix();
-        glTranslatef(0, 0.18f, 0);
-        glRotatef(-90, 1,0,0);
-        GLUquadric* q = gluNewQuadric();
-        gluDisk(q, 0, 6.2, 64, 1);
-        gluDeleteQuadric(q);
-    glPopMatrix();
-
-    // Aliran air
-    drawWaterFlow(0, level1_y + 0.4f, 0, 4.2f, 1.8f);
-    drawWaterFlow(0, level2_y + 0.3f, 0, 3.1f, 1.4f);
-    drawWaterFlow(0, level3_y + 0.25f, 0, 2.0f, 1.2f);
-
-    glDepthMask(GL_TRUE);
-}
-
 // ---------------------------------- pergerakan kamera
 void updateCameraMovement() {
     float speed = MOVE_SPEED * deltaTime;
@@ -627,16 +834,14 @@ void display() {
     // Update pencahayaan DULUAN sebelum view matrix
     updateLighting();
     Lantai();
-    dekorasiTaman();
-    drawFountain();
-    // drawFloor();
-    // updateLighting();
-
+    
     // Opsional: tampilkan visualisasi lampu (untuk debug)
     for (int i = 0; i < totalLights; i++) {
         drawLightSource(lightX[i], lightY[i], lightZ[i], lightIsSpot[i]);
     }
     lampu();
+    AirMancur();
+    dekorasiTaman();
 
     glutSwapBuffers();
 }
@@ -731,7 +936,8 @@ void timer(int value) {
     updateCameraMovement();
 
     glutPostRedisplay();
-    glutTimerFunc(16, timer, 0); // ~60 FPS
+    glutTimerFunc(16, timer, 0);
+    glutTimerFunc(16, updateAnimation, 0);
 }
 
 void reshape(int w, int h) {
