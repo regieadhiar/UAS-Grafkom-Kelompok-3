@@ -585,6 +585,126 @@ void drawBench(float x, float y, float z, float rotation) {
     glPopMatrix();
 }
 
+// ===============================
+// MATERIAL
+// ===============================
+void materialKayu(float shade){
+    GLfloat mat[]  = {0.75f-shade, 0.55f-shade*0.7f, 0.25f-shade*0.5f, 1};
+    GLfloat spec[] = {0.15f,0.15f,0.15f,1};
+    glMaterialfv(GL_FRONT,GL_AMBIENT_AND_DIFFUSE,mat);
+    glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
+    glMaterialf(GL_FRONT,GL_SHININESS,12);
+}
+
+void materialHitam(){
+    GLfloat mat[] = {0.08f,0.08f,0.08f,1};
+    glMaterialfv(GL_FRONT,GL_AMBIENT_AND_DIFFUSE,mat);
+}
+
+void materialMetal(){
+    GLfloat mat[]  = {0.8f,0.8f,0.8f,1};
+    GLfloat spec[] = {1,1,1,1};
+    glMaterialfv(GL_FRONT,GL_AMBIENT_AND_DIFFUSE,mat);
+    glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
+    glMaterialf(GL_FRONT,GL_SHININESS,90);
+}
+
+// ===============================
+// PANEL KAYU (DENGAN GRADASI)
+// ===============================
+void panelKayu(float x,float y,float z,float shade){
+    glPushMatrix();
+        glScalef(x,y,z);
+        materialKayu(shade);
+        glutSolidCube(1.0f);
+    glPopMatrix();
+}
+
+// ===============================
+// TONG SAMPAH KAYU MODERN
+// ===============================
+void tongSampah(
+    float tx,float ty,float tz,
+    float sx,float sy,float sz,
+    float rx,float ry,float rz
+){
+    glPushMatrix();
+
+    glTranslatef(tx,ty,tz);
+    glRotatef(rx,1,0,0);
+    glRotatef(ry,0,1,0);
+    glRotatef(rz,0,0,1);
+    glScalef(sx,sy,sz);
+
+    // FRAME HITAM TIPIS
+    glPushMatrix();
+        glScalef(2.05f,4.0f,2.05f);
+        materialHitam();
+        glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // PANEL KAYU DEPAN (GRADASI WARNA)
+    float shade = 0.0f;
+    for(float i=-0.85f;i<=0.85f;i+=0.22f){
+        glPushMatrix();
+            glTranslatef(i,0,1.06f);
+            panelKayu(0.18f,3.2f,0.08f, shade);
+        glPopMatrix();
+        shade += 0.03f; // gradasi halus
+    }
+
+    // LUBANG DEPAN (CEKUNG)
+    glPushMatrix();
+        glTranslatef(0,0.4f,1.18f);
+        glScalef(1.2f,0.6f,0.3f);
+        materialHitam();
+        glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // PENUTUP ATAS
+    glPushMatrix();
+        glTranslatef(0,2.05f,0);
+        glScalef(2.2f,0.3f,2.2f);
+        materialHitam();
+        glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // RING STAINLESS
+    glPushMatrix();
+        glTranslatef(0,2.25f,0);
+        materialMetal();
+        glutSolidTorus(0.12,0.38,40,40);
+    glPopMatrix();
+
+    glPopMatrix();
+}
+
+void drawBush(float x, float z, float scale) {
+    glPushMatrix();
+    glTranslatef(x, 0.0f, z);
+    glScalef(scale, scale, scale);
+
+    glColor3ub(34, 139, 34);
+
+    glPushMatrix();
+        glScalef(1.0f, 0.6f, 1.0f); 
+        glTranslatef(0.0f, 1.3f, 0.0f); 
+        glutSolidSphere(1.0, 16, 16); 
+    glPopMatrix();
+
+    glPopMatrix();
+}
+
+// Fungsi untuk menggambar garis semak antara dua titik dengan jumlah tertentu
+void drawBushLine(float x1, float z1, float x2, float z2, int jumlah, float scale) {
+    for (int i = 0; i <= jumlah; i++) {
+        float t = (float)i / jumlah;
+        float x = x1 + (x2 - x1) * t;
+        float z = z1 + (z2 - z1) * t;
+        drawBush(x, z, scale); 
+    }
+}
+
 void dekorasiTaman() {
     // Bangku 
     drawBench(9.0f, 0.5f, 9.0f, -135.0f); 
@@ -613,6 +733,37 @@ void dekorasiTaman() {
     drawTree(-5.0f, 31.0f); 
     drawTree(5.0f, -31.0f);  
     drawTree(-5.0f, -31.0f); 
+
+    tongSampah(12.0f,0.2f,7.0f,0.5f,0.8f,0.5f,0.0f,-135.0f,0.0f);
+    tongSampah(-12.0f,0.2f,7.0f,0.5f,0.8f,0.5f,0.0f,135.0f,0.0f);
+    tongSampah(12.0f,0.2f,-7.0f,0.5f,0.8f,0.5f,0.0f,-45.0f,0.0f);
+    tongSampah(-12.0f,0.2f,-7.0f,0.5f,0.8f,0.5f,0.0f,45.0f,0.0f);
+
+    // Semak-semak di sekitar taman
+    for (int i = 0; i < 4; i++) {
+        glPushMatrix();
+            // Rotasi 4 sisi (Timur, Utara, Barat, Selatan)
+            glRotatef(i * 90.0f, 0.0f, 1.0f, 0.0f);
+
+            // 1. Bush Belakang (Jauh/Luar)
+            drawBushLine(31.0f, 12.8f, 12.8f, 31.0f, 15, 1.4f);
+
+            // 2. Bush Depan (Dekat/Dalam)
+            // Dari titik (20.0, 8.3) tarik garis miring ke (8.3, 20.0)
+            drawBushLine(20.0f, 8.3f, 8.3f, 20.0f, 9, 1.4f);
+            
+            // 3. Bush Sisi Kanan Jalan (Z Positif)
+            drawBushLine(21.0f, 5.5f, 30.5f, 5.5f, 5, 1.4f);  // Lurus
+            drawBushLine(30.0f, 5.5f, 31.2f, 8.2f, 1, 1.4f);  // penghubung
+            drawBushLine(31.2f, 7.8f, 31.5f, 10.5f, 1, 1.4f); // Pojok
+
+            // 4. Bush Sisi Kiri Jalan (Z Negatif)
+            drawBushLine(21.0f, -5.5f, 30.5f, -5.5f, 5, 1.4f);
+            drawBushLine(30.0f, -5.5f, 31.2f, -8.2f, 1, 1.4f);
+            drawBushLine(31.2f, -7.8f, 31.5f, -10.5f, 1, 1.4f);
+
+        glPopMatrix();
+    }
 }
 
 // Fungsi untuk menggambar Lampu Taman Modern
