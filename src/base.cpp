@@ -20,7 +20,7 @@ float cameraYaw = 0.0f;      // rotasi horizontal (derajat)
 float cameraPitch = -20.0f; // rotasi vertikal (derajat)
 
 // Tambahkan di bagian global (dekat variabel kamera lainnya)
-enum CameraMode { FREE_CAMERA, ORBIT_CAMERA };
+enum CameraMode { FREE_CAMERA, ORBIT_CAMERA, TOP_CAMERA };
 CameraMode currentMode = FREE_CAMERA;  // default: bebas gerak
 
 // Untuk mode Orbit
@@ -35,7 +35,8 @@ float targetLookY = 1.0f;   // biasanya agak di atas lantai supaya lebih natural
 float targetLookZ = 0.0f;
 
 float autoRotateSpeed = 20.0f;     // derajat per detik (positif = searah jarum jam, negatif = berlawanan)
-bool autoRotateEnabled = false;     // bisa di-toggle kalau mau
+bool autoRotateEnabled = true;     // bisa di-toggle kalau mau
+int viewMode = 1; // 1: 3D, 2: 2D
 
 int windowWidth = 1200, windowHeight = 800;
 bool mouseCaptured = false;
@@ -681,17 +682,99 @@ void tongSampah(
 
 void drawBush(float x, float z, float scale) {
     glPushMatrix();
-    glTranslatef(x, 0.0f, z);
+    glTranslatef(x, 0.0f, z); // Posisi di tanah
     glScalef(scale, scale, scale);
 
-    glColor3ub(34, 139, 34);
-
+    // Warna untuk bagian dasar
+    glColor3ub(34, 100, 34); 
+    
+    // Bola utama (tengah) 
     glPushMatrix();
-        glScalef(1.0f, 0.6f, 1.0f); 
-        glTranslatef(0.0f, 1.3f, 0.0f); 
-        glutSolidSphere(1.0, 16, 16); 
+    glScalef(1.2f, 0.8f, 1.2f); 
+    glutSolidSphere(1.0, 16, 16);
     glPopMatrix();
 
+    // Warna untuk bagian atas/daun muda
+    glColor3ub(50, 160, 50); 
+
+    // Tambahkan gumpalan-gumpalan daun di sekitarnya
+    // Gumpalan 1
+    glPushMatrix();
+    glTranslatef(0.5f, 0.5f, 0.0f);
+    glutSolidSphere(0.7, 16, 16);
+    glPopMatrix();
+
+    // Gumpalan 2
+    glPushMatrix();
+    glTranslatef(-0.5f, 0.4f, 0.4f);
+    glutSolidSphere(0.65, 16, 16);
+    glPopMatrix();
+
+    // Gumpalan 3
+    glPushMatrix();
+    glTranslatef(0.1f, 0.6f, -0.5f);
+    glutSolidSphere(0.7, 16, 16);
+    glPopMatrix();
+
+    // Gumpalan 4
+    glPushMatrix();
+    glTranslatef(-0.3f, 0.3f, -0.6f);
+    glutSolidSphere(0.6, 16, 16);
+    glPopMatrix();
+
+    glPopMatrix();
+}
+
+void drawPiknikScene() {
+    // 1. TIKAR (Motif Kotak-kotak Merah Putih)
+    float matSize = 4.0f;
+    float step = 0.5f;
+    glPushMatrix();
+    glTranslatef(0.0f, 0.01f, 0.0f); // Sedikit di atas tanah agar tidak berkedip
+    for (float i = -matSize / 2; i < matSize / 2; i += step) {
+        for (float j = -matSize / 2; j < matSize / 2; j += step) {
+            // Selang-seling warna merah dan putih
+            if ((int)((i + j) * 2) % 2 == 0) glColor3ub(200, 30, 30); // Merah
+            else glColor3ub(255, 255, 255); // Putih
+            
+            glBegin(GL_QUADS);
+                glNormal3f(0, 1, 0);
+                glVertex3f(i, 0, j);
+                glVertex3f(i + step, 0, j);
+                glVertex3f(i + step, 0, j + step);
+                glVertex3f(i, 0, j + step);
+            glEnd();
+        }
+    }
+    glPopMatrix();
+
+    // 2. KERANJANG PIKNIK (Cokelat Anyaman)
+    glPushMatrix();
+    glTranslatef(0.5f, 0.3f, 0.0f); // Posisi di atas tikar
+    glColor3ub(139, 69, 19); // Cokelat kayu
+    
+    // Badan Keranjang
+    glPushMatrix();
+    glScalef(1.2f, 0.6f, 0.8f);
+    glutSolidCube(1.0);
+    glPopMatrix();
+
+    // Tutup Keranjang (Agak terbuka sedikit)
+    glPushMatrix();
+    glTranslatef(0.0f, 0.35f, 0.0f);
+    glRotatef(-10, 0, 0, 1);
+    glScalef(1.3f, 0.1f, 0.9f);
+    glutSolidCube(1.0);
+    glPopMatrix();
+
+    // Gagang Keranjang (Torus yang digepengkan)
+    glPushMatrix();
+    glTranslatef(0.0f, 0.2f, 0.0f);
+    glRotatef(90, 0, 1, 0);
+    glScalef(1.0f, 1.5f, 0.1f);
+    glutSolidTorus(0.05, 0.4, 10, 20);
+    glPopMatrix();
+    
     glPopMatrix();
 }
 
@@ -738,6 +821,23 @@ void dekorasiTaman() {
     tongSampah(-12.0f,0.2f,7.0f,0.5f,0.8f,0.5f,0.0f,135.0f,0.0f);
     tongSampah(12.0f,0.2f,-7.0f,0.5f,0.8f,0.5f,0.0f,-45.0f,0.0f);
     tongSampah(-12.0f,0.2f,-7.0f,0.5f,0.8f,0.5f,0.0f,45.0f,0.0f);
+    // Area Piknik
+    glPushMatrix();
+        glTranslatef(6.0f, 0.5f, 16.0f);
+        drawPiknikScene();
+    glPopMatrix();
+    glPushMatrix();
+        glTranslatef(6.0f, 0.5f, -16.0f);
+        drawPiknikScene();
+    glPopMatrix();
+    glPushMatrix();
+        glTranslatef(-6.0f, 0.5f, 16.0f);
+        drawPiknikScene();
+    glPopMatrix();
+    glPushMatrix();
+        glTranslatef(-6.0f, 0.5f, -16.0f);
+        drawPiknikScene();
+    glPopMatrix();
 
     // Semak-semak di sekitar taman
     for (int i = 0; i < 4; i++) {
@@ -966,8 +1066,9 @@ void display() {
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
-    if (currentMode == FREE_CAMERA) {
+    if (viewMode == 1) {
+        
+        if (currentMode == FREE_CAMERA) {
         // perhitungan lookAt seperti sebelumnya (arah depan)
         float yawRad   = cameraYaw * PI / 180.0f;
         float pitchRad = cameraPitch * PI / 180.0f;
@@ -976,24 +1077,41 @@ void display() {
                   cameraPosY + sin(pitchRad),
                   cameraPosZ - cos(yawRad)*cos(pitchRad),
                   0,1,0);
-    } else {
-        // Orbit: selalu menghadap tepat ke pusat
-        gluLookAt(cameraPosX, cameraPosY, cameraPosZ,
-                  orbitCenterX, orbitCenterY, orbitCenterZ,
-                  0,1,0);
-    }
-    // Update pencahayaan DULUAN sebelum view matrix
-    updateLighting();
-    Lantai();
-    
-    // Opsional: tampilkan visualisasi lampu (untuk debug)
-    for (int i = 0; i < totalLights; i++) {
-        drawLightSource(lightX[i], lightY[i], lightZ[i], lightIsSpot[i]);
-    }
-    lampu();
-    AirMancur();
-    dekorasiTaman();
+        } 
+        else if (currentMode == ORBIT_CAMERA) {
+            // Orbit: selalu menghadap tepat ke pusat
+            gluLookAt(cameraPosX, cameraPosY, cameraPosZ,
+                    orbitCenterX, orbitCenterY, orbitCenterZ,
+                    0,1,0);
+        } else {
+            gluLookAt(0.0f, 60.0f, 0.0f,  
+                    0.0f, 0.0f,  0.0f,   
+                    0.0f, 0.0f, -1.0f);
+        }
 
+         // Update pencahayaan DULUAN sebelum view matrix
+        updateLighting();
+        Lantai();
+        
+        // Opsional: tampilkan visualisasi lampu (untuk debug)
+        for (int i = 0; i < totalLights; i++) {
+            drawLightSource(lightX[i], lightY[i], lightZ[i], lightIsSpot[i]);
+        }
+        lampu();
+        AirMancur();
+        dekorasiTaman();
+    } else if (viewMode == 2) {
+        glRotatef(90.0, 1.0, 0.0, 0.0);
+        glTranslatef(0.0, -65.0, 0.0);
+        Lantai();
+        // Opsional: tampilkan visualisasi lampu (untuk debug)
+        for (int i = 0; i < totalLights; i++) {
+            drawLightSource(lightX[i], lightY[i], lightZ[i], lightIsSpot[i]);
+        }
+        lampu();
+        AirMancur();
+        dekorasiTaman();
+    }
     glutSwapBuffers();
 }
 
@@ -1059,9 +1177,21 @@ void keyboard(unsigned char key, int x, int y) {
             orbitYaw = 0;
             orbitPitch = 20;
             orbitRadius = 10;
-        } else {
+        } else if (currentMode == ORBIT_CAMERA) {
+            currentMode = TOP_CAMERA;
+            printf("Switched to TOP CAMERA\n");
+        } else if (currentMode == TOP_CAMERA) {
             currentMode = FREE_CAMERA;
             printf("Switched to FREE CAMERA\n");
+        }
+    }
+    if (key == 'v') {  // Tekan V untuk switch view mode
+        if (viewMode == 1) {
+            viewMode = 2;
+            printf("Switched to 2D View Mode\n");
+        } else {
+            viewMode = 1;
+            printf("Switched to 3D View Mode\n");
         }
     }
     if (key == 27) {  // ESC
@@ -1091,10 +1221,27 @@ void timer(int value) {
     glutTimerFunc(16, updateAnimation, 0);
 }
 
-void reshape(int w, int h) {
-    windowWidth = w;
-    windowHeight = h;
-    glViewport(0, 0, w, h);
+void reshape(int width, int height) {
+    windowWidth = width;
+    windowHeight = height;
+    glViewport(0, 0, width, height);
+    
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    if (viewMode == 1) {
+        // Mode 3D: Perspective atau Ortho 3D
+        float aspect = (float)width / (float)height;
+        gluPerspective(60.0, aspect, 1.0, 100.0);
+    } 
+    else if (viewMode == 2) {
+        // Mode 2D: gluOrtho2D
+        gluOrtho2D(-15.0, 15.0, -15.0, 15.0); 
+        // Alternatif: gluOrtho2D(0, width, 0, height); jika ingin koordinat pixel
+    }
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 int main(int argc, char** argv) {

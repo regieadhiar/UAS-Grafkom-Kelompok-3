@@ -35,7 +35,8 @@ float targetLookY = 1.0f;   // biasanya agak di atas lantai supaya lebih natural
 float targetLookZ = 0.0f;
 
 float autoRotateSpeed = 20.0f;     // derajat per detik (positif = searah jarum jam, negatif = berlawanan)
-bool autoRotateEnabled = false;     // bisa di-toggle kalau mau
+bool autoRotateEnabled = true;     // bisa di-toggle kalau mau
+int viewMode = 1; // 1: 3D, 2: 2D
 
 int windowWidth = 1200, windowHeight = 800;
 bool mouseCaptured = false;
@@ -867,10 +868,6 @@ void updateCameraMovement() {
         if (keys['e'] || keys['E']) cameraPosY += speed;
         if (keys['q'] || keys['Q']) cameraPosY -= speed;
     } 
-    else if (currentMode == ORBIT_CAMERA) {
-            // Pindah ke Top View
-            currentMode = TOP_CAMERA;
-    }
     else {  // ORBIT_CAMERA
         // Kontrol manual tetap ada (opsional)
         if (keys['w'] || keys['W']) orbitPitch += 40.0f * deltaTime;
@@ -916,8 +913,9 @@ void display() {
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-
-    if (currentMode == FREE_CAMERA) {
+    if (viewMode == 1) {
+        
+        if (currentMode == FREE_CAMERA) {
         // perhitungan lookAt seperti sebelumnya (arah depan)
         float yawRad   = cameraYaw * PI / 180.0f;
         float pitchRad = cameraPitch * PI / 180.0f;
@@ -926,29 +924,41 @@ void display() {
                   cameraPosY + sin(pitchRad),
                   cameraPosZ - cos(yawRad)*cos(pitchRad),
                   0,1,0);
-    } 
-    else if (currentMode == ORBIT_CAMERA) {
-        // Orbit: selalu menghadap tepat ke pusat
-        gluLookAt(cameraPosX, cameraPosY, cameraPosZ,
-                  orbitCenterX, orbitCenterY, orbitCenterZ,
-                  0,1,0);
-    } else {
-        gluLookAt(0.0f, 60.0f, 0.0f,  
-                  0.0f, 0.0f,  0.0f,   
-                  0.0f, 0.0f, -1.0f);
-    }
-    // Update pencahayaan DULUAN sebelum view matrix
-    updateLighting();
-    Lantai();
-    
-    // Opsional: tampilkan visualisasi lampu (untuk debug)
-    for (int i = 0; i < totalLights; i++) {
-        drawLightSource(lightX[i], lightY[i], lightZ[i], lightIsSpot[i]);
-    }
-    lampu();
-    AirMancur();
-    dekorasiTaman();
+        } 
+        else if (currentMode == ORBIT_CAMERA) {
+            // Orbit: selalu menghadap tepat ke pusat
+            gluLookAt(cameraPosX, cameraPosY, cameraPosZ,
+                    orbitCenterX, orbitCenterY, orbitCenterZ,
+                    0,1,0);
+        } else {
+            gluLookAt(0.0f, 60.0f, 0.0f,  
+                    0.0f, 0.0f,  0.0f,   
+                    0.0f, 0.0f, -1.0f);
+        }
 
+         // Update pencahayaan DULUAN sebelum view matrix
+        updateLighting();
+        Lantai();
+        
+        // Opsional: tampilkan visualisasi lampu (untuk debug)
+        for (int i = 0; i < totalLights; i++) {
+            drawLightSource(lightX[i], lightY[i], lightZ[i], lightIsSpot[i]);
+        }
+        lampu();
+        AirMancur();
+        dekorasiTaman();
+    } else if (viewMode == 2) {
+        glRotatef(90.0, 1.0, 0.0, 0.0);
+        glTranslatef(0.0, -65.0, 0.0);
+        Lantai();
+        // Opsional: tampilkan visualisasi lampu (untuk debug)
+        for (int i = 0; i < totalLights; i++) {
+            drawLightSource(lightX[i], lightY[i], lightZ[i], lightIsSpot[i]);
+        }
+        lampu();
+        AirMancur();
+        dekorasiTaman();
+    }
     glutSwapBuffers();
 }
 
@@ -984,12 +994,12 @@ void mouseMotion(int x, int y) {
         if (cameraPitch > 89.0f)  cameraPitch = 89.0f;
         if (cameraPitch < -89.0f) cameraPitch = -89.0f;
     }
-    else {  // ORBIT_CAMERA
-        orbitYaw   += deltaX * 1.5f;   // lebih responsif di orbit
-        orbitPitch -= deltaY * 1.2f;
-        if (orbitPitch > 85.0f)  orbitPitch = 85.0f;
-        if (orbitPitch < -85.0f) orbitPitch = -85.0f;
-    }
+    // else {  // ORBIT_CAMERA
+    //     orbitYaw   += deltaX * 1.5f;   // lebih responsif di orbit
+    //     orbitPitch -= deltaY * 1.2f;
+    //     if (orbitPitch > 85.0f)  orbitPitch = 85.0f;
+    //     if (orbitPitch < -85.0f) orbitPitch = -85.0f;
+    // }
 
     glutWarpPointer(centerX, centerY);
 }
@@ -1014,9 +1024,21 @@ void keyboard(unsigned char key, int x, int y) {
             orbitYaw = 0;
             orbitPitch = 20;
             orbitRadius = 10;
-        } else {
+        } else if (currentMode == ORBIT_CAMERA) {
+            currentMode = TOP_CAMERA;
+            printf("Switched to TOP CAMERA\n");
+        } else if (currentMode == TOP_CAMERA) {
             currentMode = FREE_CAMERA;
             printf("Switched to FREE CAMERA\n");
+        }
+    }
+    if (key == 'v') {  // Tekan V untuk switch view mode
+        if (viewMode == 1) {
+            viewMode = 2;
+            printf("Switched to 2D View Mode\n");
+        } else {
+            viewMode = 1;
+            printf("Switched to 3D View Mode\n");
         }
     }
     if (key == 27) {  // ESC
@@ -1046,10 +1068,25 @@ void timer(int value) {
     glutTimerFunc(16, updateAnimation, 0);
 }
 
-void reshape(int w, int h) {
-    windowWidth = w;
-    windowHeight = h;
-    glViewport(0, 0, w, h);
+void reshape(int width, int height) {
+    glViewport(0, 0, width, height);
+    
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    if (viewMode == 1) {
+        // Mode 3D: Perspective atau Ortho 3D
+        float aspect = (float)width / (float)height;
+        gluPerspective(60.0, aspect, 1.0, 100.0);  // atau gunakan glOrtho jika mau ortho 3D
+    } 
+    else if (viewMode == 2) {
+        // Mode 2D: gluOrtho2D
+        gluOrtho2D(-15.0, 15.0, -15.0, 15.0);     // sesuaikan range sesuai scene 2D kamu
+        // Alternatif: gluOrtho2D(0, width, 0, height); jika ingin koordinat pixel
+    }
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
 }
 
 int main(int argc, char** argv) {
@@ -1058,7 +1095,7 @@ int main(int argc, char** argv) {
     glutInitWindowSize(windowWidth, windowHeight);
     glutCreateWindow("Project UAS Kelompok 3");
 
-    //glutFullScreen(); // uncomment jika ingin fullscreen
+    glutFullScreen(); // uncomment jika ingin fullscreen
 
     init();
 
