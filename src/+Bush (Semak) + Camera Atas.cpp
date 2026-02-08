@@ -1,5 +1,5 @@
 // ---------------------------------- library
-#include <GL/glew.h>
+// #include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <GL/FreeImage.h>
 #include <cmath>
@@ -37,7 +37,6 @@ float targetLookZ = 0.0f;
 float autoRotateSpeed = 20.0f;     // derajat per detik (positif = searah jarum jam, negatif = berlawanan)
 bool autoRotateEnabled = true;     // bisa di-toggle kalau mau
 int viewMode = 1; // 1: 3D, 2: 2D
-bool useOrtho3D = false;  // false = perspective, true = orthographic 3D
 
 int windowWidth = 1200, windowHeight = 800;
 bool mouseCaptured = false;
@@ -587,100 +586,21 @@ void drawBench(float x, float y, float z, float rotation) {
     glPopMatrix();
 }
 
-// ===============================
-// MATERIAL
-// ===============================
-void materialKayu(float shade){
-    GLfloat mat[]  = {0.75f-shade, 0.55f-shade*0.7f, 0.25f-shade*0.5f, 1};
-    GLfloat spec[] = {0.15f,0.15f,0.15f,1};
-    glMaterialfv(GL_FRONT,GL_AMBIENT_AND_DIFFUSE,mat);
-    glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
-    glMaterialf(GL_FRONT,GL_SHININESS,12);
-}
+// void drawBush(float x, float z, float scale) {
+//     glPushMatrix();
+//     glTranslatef(x, 0.0f, z);
+//     glScalef(scale, scale, scale);
 
-void materialHitam(){
-    GLfloat mat[] = {0.08f,0.08f,0.08f,1};
-    glMaterialfv(GL_FRONT,GL_AMBIENT_AND_DIFFUSE,mat);
-}
+//     glColor3ub(34, 139, 34);
 
-void materialMetal(){
-    GLfloat mat[]  = {0.8f,0.8f,0.8f,1};
-    GLfloat spec[] = {1,1,1,1};
-    glMaterialfv(GL_FRONT,GL_AMBIENT_AND_DIFFUSE,mat);
-    glMaterialfv(GL_FRONT,GL_SPECULAR,spec);
-    glMaterialf(GL_FRONT,GL_SHININESS,90);
-}
+//     glPushMatrix();
+//         glScalef(1.0f, 0.6f, 1.0f); 
+//         glTranslatef(0.0f, 1.3f, 0.0f); 
+//         glutSolidSphere(1.0, 16, 16); 
+//     glPopMatrix();
 
-// ===============================
-// PANEL KAYU (DENGAN GRADASI)
-// ===============================
-void panelKayu(float x,float y,float z,float shade){
-    glPushMatrix();
-        glScalef(x,y,z);
-        materialKayu(shade);
-        glutSolidCube(1.0f);
-    glPopMatrix();
-}
-
-// ===============================
-// TONG SAMPAH KAYU MODERN
-// ===============================
-void tongSampah(
-    float tx,float ty,float tz,
-    float sx,float sy,float sz,
-    float rx,float ry,float rz
-){
-    glPushMatrix();
-
-    glTranslatef(tx,ty,tz);
-    glRotatef(rx,1,0,0);
-    glRotatef(ry,0,1,0);
-    glRotatef(rz,0,0,1);
-    glScalef(sx,sy,sz);
-
-    // FRAME HITAM TIPIS
-    glPushMatrix();
-        glScalef(2.05f,4.0f,2.05f);
-        materialHitam();
-        glutSolidCube(1.0f);
-    glPopMatrix();
-
-    // PANEL KAYU DEPAN (GRADASI WARNA)
-    float shade = 0.0f;
-    for(float i=-0.85f;i<=0.85f;i+=0.22f){
-        glPushMatrix();
-            glTranslatef(i,0,1.06f);
-            panelKayu(0.18f,3.2f,0.08f, shade);
-        glPopMatrix();
-        shade += 0.03f; // gradasi halus
-    }
-
-    // LUBANG DEPAN (CEKUNG)
-    glPushMatrix();
-        glTranslatef(0,0.4f,1.18f);
-        glScalef(1.2f,0.6f,0.3f);
-        materialHitam();
-        glutSolidCube(1.0f);
-    glPopMatrix();
-
-    // PENUTUP ATAS
-    glPushMatrix();
-        glTranslatef(0,2.05f,0);
-        glScalef(2.2f,0.3f,2.2f);
-        materialHitam();
-        glutSolidCube(1.0f);
-    glPopMatrix();
-
-    // RING STAINLESS
-    glPushMatrix();
-        glTranslatef(0,2.25f,0);
-        materialMetal();
-        glutSolidTorus(0.12,0.38,40,40);
-    glPopMatrix();
-
-    glPopMatrix();
-}
-
+//     glPopMatrix();
+// }
 void drawBush(float x, float z, float scale) {
     glPushMatrix();
     glTranslatef(x, 0.0f, z); // Posisi di tanah
@@ -726,58 +646,6 @@ void drawBush(float x, float z, float scale) {
     glPopMatrix();
 }
 
-void drawPiknikScene() {
-    // 1. TIKAR (Motif Kotak-kotak Merah Putih)
-    float matSize = 4.0f;
-    float step = 0.5f;
-    glPushMatrix();
-    glTranslatef(0.0f, 0.01f, 0.0f); // Sedikit di atas tanah agar tidak berkedip
-    for (float i = -matSize / 2; i < matSize / 2; i += step) {
-        for (float j = -matSize / 2; j < matSize / 2; j += step) {
-            // Selang-seling warna merah dan putih
-            if ((int)((i + j) * 2) % 2 == 0) glColor3ub(200, 30, 30); // Merah
-            else glColor3ub(255, 255, 255); // Putih
-            
-            glBegin(GL_QUADS);
-                glNormal3f(0, 1, 0);
-                glVertex3f(i, 0, j);
-                glVertex3f(i + step, 0, j);
-                glVertex3f(i + step, 0, j + step);
-                glVertex3f(i, 0, j + step);
-            glEnd();
-        }
-    }
-    glPopMatrix();
-
-    // 2. KERANJANG PIKNIK (Cokelat Anyaman)
-    glPushMatrix();
-    glTranslatef(0.5f, 0.3f, 0.0f); // Posisi di atas tikar
-    glColor3ub(139, 69, 19); // Cokelat kayu
-    
-    // Badan Keranjang
-    glPushMatrix();
-    glScalef(1.2f, 0.6f, 0.8f);
-    glutSolidCube(1.0);
-    glPopMatrix();
-
-    // Tutup Keranjang (Agak terbuka sedikit)
-    glPushMatrix();
-    glTranslatef(0.0f, 0.35f, 0.0f);
-    glRotatef(-10, 0, 0, 1);
-    glScalef(1.3f, 0.1f, 0.9f);
-    glutSolidCube(1.0);
-    glPopMatrix();
-
-    // Gagang Keranjang (Torus yang digepengkan)
-    glPushMatrix();
-    glTranslatef(0.0f, 0.2f, 0.0f);
-    glRotatef(90, 0, 1, 0);
-    glScalef(1.0f, 1.5f, 0.1f);
-    glutSolidTorus(0.05, 0.4, 10, 20);
-    glPopMatrix();
-    
-    glPopMatrix();
-}
 
 // Fungsi untuk menggambar garis semak antara dua titik dengan jumlah tertentu
 void drawBushLine(float x1, float z1, float x2, float z2, int jumlah, float scale) {
@@ -817,29 +685,7 @@ void dekorasiTaman() {
     drawTree(-5.0f, 31.0f); 
     drawTree(5.0f, -31.0f);  
     drawTree(-5.0f, -31.0f); 
-
-    tongSampah(12.0f,0.2f,7.0f,0.5f,0.8f,0.5f,0.0f,-135.0f,0.0f);
-    tongSampah(-12.0f,0.2f,7.0f,0.5f,0.8f,0.5f,0.0f,135.0f,0.0f);
-    tongSampah(12.0f,0.2f,-7.0f,0.5f,0.8f,0.5f,0.0f,-45.0f,0.0f);
-    tongSampah(-12.0f,0.2f,-7.0f,0.5f,0.8f,0.5f,0.0f,45.0f,0.0f);
-    // Area Piknik
-    glPushMatrix();
-        glTranslatef(6.0f, 0.5f, 16.0f);
-        drawPiknikScene();
-    glPopMatrix();
-    glPushMatrix();
-        glTranslatef(6.0f, 0.5f, -16.0f);
-        drawPiknikScene();
-    glPopMatrix();
-    glPushMatrix();
-        glTranslatef(-6.0f, 0.5f, 16.0f);
-        drawPiknikScene();
-    glPopMatrix();
-    glPushMatrix();
-        glTranslatef(-6.0f, 0.5f, -16.0f);
-        drawPiknikScene();
-    glPopMatrix();
-
+    
     // Semak-semak di sekitar taman
     for (int i = 0; i < 4; i++) {
         glPushMatrix();
@@ -1021,7 +867,7 @@ void updateCameraMovement() {
         }
         if (keys['e'] || keys['E']) cameraPosY += speed;
         if (keys['q'] || keys['Q']) cameraPosY -= speed;
-    }
+    } 
     else {  // ORBIT_CAMERA
         // Kontrol manual tetap ada (opsional)
         if (keys['w'] || keys['W']) orbitPitch += 40.0f * deltaTime;
@@ -1134,34 +980,6 @@ void init() {
 
 }
 
-void reshape(int width, int height) {
-    windowWidth = width;
-    windowHeight = height;
-    glViewport(0, 0, width, height);
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-
-    if (viewMode == 1) {
-    float aspect = (float)width / (float)height;
-        if (useOrtho3D) {
-            // Orthographic 3D
-            glOrtho(-40.0, 40.0, -40.0 / aspect, 40.0 / aspect, 0.1, 200.0);
-        } else {
-            // Perspective
-            gluPerspective(60.0, aspect, 0.1, 200.0);
-        }
-    } 
-    else if (viewMode == 2) {
-        // Mode 2D: gluOrtho2D
-        gluOrtho2D(-15.0, 15.0, -15.0, 15.0); 
-        // Alternatif: gluOrtho2D(0, width, 0, height); jika ingin koordinat pixel
-    }
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-}
-
 void mouseMotion(int x, int y) {
     if (!mouseCaptured) return;
 
@@ -1223,12 +1041,6 @@ void keyboard(unsigned char key, int x, int y) {
             printf("Switched to 3D View Mode\n");
         }
     }
-    if (key == 'o' || key == 'O') {
-    useOrtho3D = !useOrtho3D;
-    printf("Proyeksi: %s\n", useOrtho3D ? "Orthographic 3D" : "Perspective");
-    reshape(windowWidth, windowHeight);
-    glutPostRedisplay();   
-    }
     if (key == 27) {  // ESC
         if (mouseCaptured) {
             mouseCaptured = false;
@@ -1236,10 +1048,6 @@ void keyboard(unsigned char key, int x, int y) {
         } else {
             exit(0);
         }
-    }
-    if (key == 'l' || key == 'L') {  // L key to toggle lighting
-        totalLights = (totalLights == 0) ? 8 : 0;
-        glutPostRedisplay();
     }
 }
 
@@ -1260,7 +1068,26 @@ void timer(int value) {
     glutTimerFunc(16, updateAnimation, 0);
 }
 
+void reshape(int width, int height) {
+    glViewport(0, 0, width, height);
+    
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
 
+    if (viewMode == 1) {
+        // Mode 3D: Perspective atau Ortho 3D
+        float aspect = (float)width / (float)height;
+        gluPerspective(60.0, aspect, 1.0, 100.0);  // atau gunakan glOrtho jika mau ortho 3D
+    } 
+    else if (viewMode == 2) {
+        // Mode 2D: gluOrtho2D
+        gluOrtho2D(-15.0, 15.0, -15.0, 15.0);     // sesuaikan range sesuai scene 2D kamu
+        // Alternatif: gluOrtho2D(0, width, 0, height); jika ingin koordinat pixel
+    }
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
 
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
